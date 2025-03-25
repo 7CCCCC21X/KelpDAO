@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kelp & Kernel 空投资格批量查询</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+      color: #222;
+    }
+    textarea {
+      width: 100%;
+      height: 150px;
+      font-family: monospace;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    button:disabled {
+      background-color: #999;
+      cursor: not-allowed;
+    }
+    .summary {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background: #fafafa;
+    }
+    .airdrop-link {
+      display: inline-block;
+      margin-top: 24px;
+      padding: 10px 16px;
+      background-color: orange;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 6px;
+    }
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+        width: 100%;
+      }
+      thead tr { display: none; }
+      tr {
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: white;
+        padding: 10px;
+      }
+      td {
+        border: none;
+        padding: 6px 10px;
+        position: relative;
+      }
+      td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+        margin-bottom: 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h2>Kelp / Kernel 空投资格批量查询</h2>
+  <p>请输入钱包地址（每行一个）：</p>
+  <textarea id="addressInput" placeholder="0x123...\n0xabc..."></textarea>
+  <br />
+  <button id="checkBtn" onclick="checkPoints()">查询积分</button>
+  <div class="summary" id="summary"></div>
+  <table id="resultTable" style="display: none;">
+    <thead>
+      <tr><th>#</th><th>地址</th><th>积分总计</th><th>资格判断</th></tr>
+    </thead>
+    <tbody id="resultBody"></tbody>
+  </table>
+
+  <a class="airdrop-link" href="https://kerneldao.com/airdrop-checker/?utm_source=social" target="_blank">🪂 前往空投领取页面</a>
+  <p style="margin-top: 30px; font-size: 14px;">作者推特：<a href="https://x.com/0xXIAOc" target="_blank">@0xXIAOc</a></p>
+
+  <script>
+    async function checkPoints() {
+      const input = document.getElementById('addressInput').value.trim();
+      const addresses = input.split(/\n|\r/).map(a => a.trim()).filter(a => a);
+      const resultBody = document.getElementById('resultBody');
+      const table = document.getElementById('resultTable');
+      const summary = document.getElementById('summary');
+      const checkBtn = document.getElementById('checkBtn');
+
+      resultBody.innerHTML = '';
+      table.style.display = 'table';
+      checkBtn.disabled = true;
+      checkBtn.innerText = '查询中...';
+
+      let total = addresses.length;
+      let qualified = 0;
+      let unqualified = 0;
+
+      const fetchPromises = addresses.map((address, i) => {
+        return fetch(`https://common.kelpdao.xyz/km-el-points/user/${address}`)
+          .then(res => res.json())
+          .then(data => {
+            let kelp = parseFloat(data.value.kelpMiles || 0);
+            let el = parseFloat(data.value.elPoints || 0);
+            let sum = kelp + el;
+            let display = (sum / 1000).toFixed(1); // 显示为千为单位，保留1位小数
+            let status = sum >= 150000 ? '✅' : '❌';
+            if (sum >= 150000) qualified++; else unqualified++;
+
+            return `<tr><td data-label="#">${i + 1}</td><td data-label="地址">${address}</td><td data-label="积分总计">${display}</td><td data-label="资格判断">${status}</td></tr>`;
+          })
+          .catch(() => {
+            unqualified++;
+            return `<tr><td data-label="#">${i + 1}</td><td data-label="地址">${address}</td><td data-label="积分总计">查询失败</td><td data-label="资格判断">❌</td></tr>`;
+          });
+      });
+
+      const results = await Promise.all(fetchPromises);
+      resultBody.innerHTML = results.join('');
+      summary.innerHTML = `📊 总地址数：${total}，✅ 可能符合资格：${qualified}，❌ 不符合资格：${unqualified}`;
+
+      checkBtn.disabled = false;
+      checkBtn.innerText = '查询积分';
+    }
+  </script>
+</body>
+</html>
