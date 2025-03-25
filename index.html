@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
   <meta charset="UTF-8" />
-  <title>Kelp & Kernel 空投资格批量查询</title>
+  <title>Kelp & Kernel 积分批量查询</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body {
@@ -26,6 +26,13 @@
       box-sizing: border-box;
       resize: vertical;
     }
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+    }
     button {
       padding: 12px 24px;
       font-size: 16px;
@@ -34,11 +41,18 @@
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      margin-top: 12px;
     }
     button:disabled {
       background-color: #999;
       cursor: not-allowed;
+    }
+    .airdrop-link {
+      padding: 12px 20px;
+      background-color: orange;
+      color: white;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 6px;
     }
     .summary {
       margin-top: 20px;
@@ -62,17 +76,8 @@
     th {
       background: #fafafa;
     }
-    .airdrop-link {
-      display: inline-block;
-      margin-top: 24px;
-      padding: 10px 16px;
-      background-color: orange;
-      color: white;
-      text-decoration: none;
-      font-weight: bold;
-      border-radius: 6px;
-    }
     @media (max-width: 600px) {
+      .action-row { flex-direction: column; align-items: stretch; }
       table, thead, tbody, th, td, tr {
         display: block;
         width: 100%;
@@ -100,11 +105,13 @@
   </style>
 </head>
 <body>
-  <h2>Kelp / Kernel 空投资格批量查询</h2>
+  <h2>Kelp / Kernel 积分批量查询</h2>
   <p>请输入钱包地址（每行一个）：</p>
   <textarea id="addressInput" placeholder="0x123...\n0xabc..."></textarea>
-  <br />
-  <button id="checkBtn" onclick="checkPoints()">查询积分</button>
+  <div class="action-row">
+    <button id="checkBtn" onclick="checkPoints()">查询积分</button>
+    <a class="airdrop-link" href="https://kerneldao.com/airdrop-checker/?utm_source=social" target="_blank">🪂 前往空投领取页面</a>
+  </div>
   <div class="summary" id="summary"></div>
   <table id="resultTable" style="display: none;">
     <thead>
@@ -113,7 +120,6 @@
     <tbody id="resultBody"></tbody>
   </table>
 
-  <a class="airdrop-link" href="https://kerneldao.com/airdrop-checker/?utm_source=social" target="_blank">🪂 前往空投领取页面</a>
   <p style="margin-top: 30px; font-size: 14px;">作者推特：<a href="https://x.com/0xXIAOc" target="_blank">@0xXIAOc</a></p>
 
   <script>
@@ -141,7 +147,7 @@
             let kelp = parseFloat(data.value.kelpMiles || 0);
             let el = parseFloat(data.value.elPoints || 0);
             let sum = kelp + el;
-            let display = (sum / 1000).toFixed(1); // 显示为千为单位，保留1位小数
+            let display = (sum / 1000).toFixed(1);
             let status = sum >= 150000 ? '✅' : '❌';
             if (sum >= 150000) qualified++; else unqualified++;
 
